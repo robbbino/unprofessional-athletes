@@ -377,7 +377,7 @@
     // Hide stepper if disabled
     if (!R.showMacroSliders) {
       const stepper = document.querySelector('.ua-rc-stepper');
-      if (stepper) stepper.style.display = 'none';
+      if (stepper) stepper.querySelectorAll('.ua-rc-step-btn').forEach(btn => btn.style.display = 'none');
     }
 
     document.getElementById('ua-slider-servings').value = R.baseServings;
