@@ -378,6 +378,9 @@
     if (!R.showMacroSliders) {
       const stepper = document.querySelector('.ua-rc-stepper');
       if (stepper) stepper.querySelectorAll('.ua-rc-step-btn').forEach(btn => btn.style.display = 'none');
+      const stepperBox = document.querySelector('.ua-rc-macro--stepper');
+      if (stepperBox) stepperBox.style.background = 'none';
+      if (stepperBox) stepperBox.style.borderRadius = '0';
     }
 
     document.getElementById('ua-slider-servings').value = R.baseServings;
