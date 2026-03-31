@@ -37,13 +37,21 @@
         text-transform: uppercase; letter-spacing: 0.07em;
       }
 
-      /* MACROS BOX */
+      /* MACROS BOX — kcal left with divider, P/C/F grid on right */
       .ua-rc-macros-box {
         border: 1px solid var(--border); border-radius: 8px;
-        padding: 1.25rem 1.5rem 1rem; margin-top: 2rem;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        margin-top: 2rem;
       }
       .ua-rc-macro-kcal {
-        display: flex; flex-direction: column; margin-bottom: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        padding-right: 1.5rem;
+        margin-right: 1.5rem;
+        border-right: 1px solid var(--border);
       }
       .ua-rc-macro-kcal-num {
         font-family: monospace; font-size: 2.4em; font-weight: 700;
@@ -54,11 +62,12 @@
         text-transform: uppercase; letter-spacing: 0.07em;
       }
       .ua-rc-macros {
-        display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: start;
+        display: grid; grid-template-columns: 1fr 1fr 1fr;
+        align-items: start; flex: 1;
       }
       .ua-rc-macro {
         display: flex; flex-direction: column; align-items: center !important;
-        gap: 0.25rem !important; padding: 0.65rem 0.85rem !important;
+        gap: 0.25rem !important; padding: 0.5rem 0.85rem !important;
         margin: 0 !important; text-align: center;
       }
       .ua-rc-macro--stepper { background: #f7f6f2; border-radius: 6px; }
@@ -74,11 +83,10 @@
       /* STEPPER */
       .ua-rc-stepper {
         display: flex; align-items: center !important;
-        justify-content: center !important; margin-top: 0 !important;
+        justify-content: center !important; margin-top: 0.4rem !important;
       }
-      #ua-rc-root .ua-rc-stepper .ua-rc-step-btn:first-child { margin-right: 8px !important; }
-      #ua-rc-root .ua-rc-stepper .ua-rc-step-btn:last-of-type { margin-left: 8px !important; }
-      .ua-rc-stepper .ua-rc-macro-num { min-width: 2.5rem; text-align: center; }
+      #ua-rc-root .ua-rc-stepper .ua-rc-step-btn:first-child { margin-right: 6px !important; }
+      #ua-rc-root .ua-rc-stepper .ua-rc-step-btn:last-of-type { margin-left: 6px !important; }
       .ua-rc-step-btn {
         width: 24px; height: 24px; border: 1px solid var(--border);
         border-radius: 3px; background: none; color: var(--muted);
@@ -116,9 +124,7 @@
       .ua-rc-slider-val {
         font-family: monospace; font-size: 0.85em; font-weight: 700; color: var(--green);
       }
-      .ua-rc-slider-wrap {
-        display: flex; align-items: center; margin-top: 0.35rem;
-      }
+      .ua-rc-slider-wrap { display: flex; align-items: center; margin-top: 0.35rem; }
       #ua-rc-root .ua-rc-slider-wrap .ua-rc-step-btn:first-child { margin-right: 8px !important; }
       #ua-rc-root .ua-rc-slider-wrap .ua-rc-step-btn:last-child  { margin-left:  8px !important; }
 
@@ -137,7 +143,7 @@
         background: var(--green); border: 2px solid #fff; cursor: pointer;
       }
 
-      /* HEADINGS — mirror Ghost's own spacing since their selectors don't reach nested elements */
+      /* HEADINGS */
       #ua-rc-root h2 {
         font-size: calc(1.6em * var(--factor, 1)); letter-spacing: -0.02em;
         margin-top: calc(56px * var(--content-spacing-factor, 1)); margin-bottom: 0;
@@ -175,8 +181,18 @@
       }
       .ua-rc-step-text { line-height: 1.65; }
 
+      /* MOBILE — stack kcal above P/C/F */
       @media (max-width: 480px) {
         .ua-rc-stats { gap: 1.25rem; }
+        .ua-rc-macros-box { flex-direction: column; align-items: flex-start; }
+        .ua-rc-macro-kcal {
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+          padding-right: 0; margin-right: 0;
+          padding-bottom: 1rem; margin-bottom: 1rem;
+          width: 100%;
+        }
+        .ua-rc-macros { width: 100%; }
       }
     `;
     document.head.appendChild(style);
@@ -188,16 +204,14 @@
   function parseContent(root) {
     const ingredients = [];
     const method      = [];
-
-    let mode                = null;
-    let currentIngSection   = null;
-    let currentMethSection  = null;
+    let mode = null;
+    let currentIngSection  = null;
+    let currentMethSection = null;
 
     for (const el of root.children) {
       const tag  = el.tagName;
       const text = el.textContent.trim().toLowerCase();
 
-      // H2 sets mode
       if (tag === 'H2') {
         if (text === 'ingredients') {
           mode = 'ingredients';
@@ -214,7 +228,6 @@
         continue;
       }
 
-      // H3 starts a new sub-section
       if (tag === 'H3') {
         if (mode === 'ingredients') {
           if (currentIngSection && currentIngSection.items.length)
@@ -228,7 +241,6 @@
         continue;
       }
 
-      // UL = ingredients list
       if (tag === 'UL' && mode === 'ingredients' && currentIngSection) {
         el.querySelectorAll('li').forEach(li => {
           currentIngSection.items.push({
@@ -241,7 +253,6 @@
         continue;
       }
 
-      // OL = method steps
       if (tag === 'OL' && mode === 'method' && currentMethSection) {
         el.querySelectorAll('li').forEach(li => {
           currentMethSection.steps.push(li.innerHTML.trim());
@@ -250,7 +261,6 @@
       }
     }
 
-    // Push any trailing sections
     if (currentIngSection  && currentIngSection.items.length)  ingredients.push(currentIngSection);
     if (currentMethSection && currentMethSection.steps.length) method.push(currentMethSection);
 
@@ -379,13 +389,11 @@
       const stepper = document.querySelector('.ua-rc-stepper');
       if (stepper) stepper.querySelectorAll('.ua-rc-step-btn').forEach(btn => btn.style.display = 'none');
       const stepperBox = document.querySelector('.ua-rc-macro--stepper');
-      if (stepperBox) stepperBox.style.background = 'none';
-      if (stepperBox) stepperBox.style.borderRadius = '0';
+      if (stepperBox) { stepperBox.style.background = 'none'; stepperBox.style.borderRadius = '0'; }
     }
 
     document.getElementById('ua-slider-servings').value = R.baseServings;
 
-    // Render ingredients
     function renderIngredients(scale) {
       document.getElementById('ua-ingredients').innerHTML =
         R.ingredients.map(sec => {
@@ -401,7 +409,6 @@
         }).join('');
     }
 
-    // Render method
     function renderMethod() {
       document.getElementById('ua-method').innerHTML =
         R.method.map(sec => {
@@ -414,7 +421,6 @@
         }).join('');
     }
 
-    // Render macros
     function render() {
       const scale    = targetKcal / B.kcal;
       const kcal     = Math.round(targetKcal);
@@ -447,7 +453,6 @@
       renderIngredients(scale * (servings / R.baseServings));
     }
 
-    // Expose handlers globally
     window.uaStepProtein = function (delta) {
       const p = Math.min(60, Math.max(1, Math.round(targetKcal * PROT_RATIO) + delta));
       targetKcal = Math.min(1200, Math.max(100, p / PROT_RATIO));
@@ -551,9 +556,7 @@
     method,
   };
 
-  // Replace semantic HTML with interactive card
   root.innerHTML = buildCardHTML(R);
-
   initBehaviour(R);
   buildSchema(R);
 
